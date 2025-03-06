@@ -1,31 +1,38 @@
 package com.zeroonelogicmod.entities;
 
-import com.zeroonelogicmod.ai.NPCMemoryAI;
+import com.zeroonelogicmod.ai.NPCMemorySystem;
 import com.zeroonelogicmod.ai.NPCEvolutionAI;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.Level;
 
+import java.util.Random;
+
 public class NPCArchivist extends Mob {
-    private final NPCMemoryAI memoryAI;
+    private final NPCMemorySystem memorySystem;
     private final NPCEvolutionAI evolutionAI;
+    private final Random random = new Random();
 
     public NPCArchivist(EntityType<? extends Mob> entityType, Level level) {
         super(entityType, level);
-        this.memoryAI = new NPCMemoryAI();
+        this.memorySystem = new NPCMemorySystem();
         this.evolutionAI = new NPCEvolutionAI();
     }
 
-    // React based on player interactions
+    // Player interaction logic
     public void interactWithPlayer(String playerAction) {
-        memoryAI.updateInteraction(playerAction);
+        memorySystem.rememberAction(playerAction);
         evolutionAI.learnFromExperience(playerAction);
-        System.out.println("Archivist behavior: " + memoryAI.decideBehavior());
-        System.out.println("Archivist evolution: " + evolutionAI.decideNextAction());
+
+        String memoryState = memorySystem.decideBasedOnMemory();
+        String evolutionState = evolutionAI.decideNextAction();
+
+        System.out.println("Archivist Memory: " + memoryState);
+        System.out.println("Archivist Evolution: " + evolutionState);
     }
 
-    // Custom AI goal for behavior tree
+    // Custom AI goal - NPC reacts dynamically
     static class ArchivistBehaviorGoal extends Goal {
         private final NPCArchivist npc;
 
@@ -40,7 +47,18 @@ public class NPCArchivist extends Mob {
 
         @Override
         public void tick() {
-            npc.interactWithPlayer("ignored"); // Default idle reaction
+            String state = npc.memorySystem.decideBasedOnMemory();
+            switch (state) {
+                case "attacked":
+                    System.out.println("Archivist is defensive!");
+                    break;
+                case "helped":
+                    System.out.println("Archivist is friendly!");
+                    break;
+                default:
+                    System.out.println("Archivist is observing...");
+                    break;
+            }
         }
     }
 
